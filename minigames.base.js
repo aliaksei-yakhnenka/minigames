@@ -8,7 +8,11 @@ var cellSize = 20;
 // Score font size in pixels.
 var scoreSize = 16;
 
+// Big message font size in pixels.
 var messageSize = 36;
+
+var _onGameRunBefore;
+var _onGameRunAfter;
 
 // Colors.
 var COLOR_GRID = 'rgba(222, 222, 222, .5)';
@@ -19,6 +23,7 @@ var COLOR_SCORE = 'rgba(0, 0, 0, .75)';
 var COLOR_MESSAGE = 'rgba(64, 64, 222, .75)';
 var COLOR_GAMEOVER = 'rgba(222, 0, 0, .75)';
 
+// Direction constants.
 var DIR_UP = 1;
 var DIR_DOWN = 3;
 var DIR_LEFT = 2;
@@ -65,22 +70,54 @@ function chance(probability) {
   return rand_between(1, 10000) <= probability * 100;
 }
 
+function matrixTurn(matrix) {
+  var _matrix = [];
+  for (var j = 0; j < matrix[0].length; j++) {
+    for (var i = 0; i < matrix.length; i++) {
+      if (!_matrix[j]) {
+        _matrix[j] = [];
+      }
+      _matrix[j][i] = 0;
+    }
+  }
+
+  for (var i = 0; i < matrix.length; i++) {
+    for (var j = 0; j < matrix[0].length; j++) {
+      _matrix[j][matrix.length - i - 1] = matrix[i][j];
+    }
+  }
+  
+  return _matrix;
+}
+
+/**
+ * Returns true if both cells have same coordinates.
+ */
 function intersects(cell1, cell2) {
   return cell1.x == cell2.x && cell1.y == cell2.y;
 }
 
 function gameInit() {
+  
+  
   canvas = document.getElementById('minigame-canvas');
-  if (canvas.getContext) {
-    context = canvas.getContext('2d');
-    window.addEventListener('keydown', gameKeydown, true);
-    gameCycle = setInterval(gameRun, gameCycleUpdateInterval);
-
-    _onGameInit();
+  if (!canvas || canvas.getContext) {
+    return;
   }
+  
+  _onGameInit = _onGameInit || function(){};
+  _onGameRunBefore = _onGameRunBefore || function(){};
+  _onGameRunAfter = _onGameRunAfter || function(){};
+  
+  context = canvas.getContext('2d');
+  window.addEventListener('keydown', gameKeydown, true);
+  gameCycle = setInterval(gameRun, gameCycleUpdateInterval);
+
+  _onGameInit();  
 }
 
 function gameRun() {
+  _onGameRunBefore();
   gameCycleUpdateTracker += gameCycleUpdateInterval;
   if (gameCycleUpdateTracker >= 500 / gameSpeed) {
     gameCycleUpdateTracker = 0;
@@ -94,6 +131,7 @@ function gameRun() {
     _onGameDraw();
     _onGameUpdateAfter();
   }
+  _onGameRunAfter();
 }
 
 function gameKeydown(event) {
@@ -121,7 +159,6 @@ function gameGetScore() {
 
 function gameSpeedUp() {
   gameSpeed++;
-  drawMessage('Speed UP!', COLOR_MESSAGE);
 }
 
 /**
@@ -176,6 +213,9 @@ function drawScoretable() {
   }
 }
 
+/**
+ * Draws a big message in the center of the screen.
+ */
 function drawMessage(text, color) {
   context.fillStyle = color;
   context.font = 'normal normal bold ' + messageSize + 'px arial';
