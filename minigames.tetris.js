@@ -1,10 +1,10 @@
 var laying = [];
 
 // array of 1 and 0
-var _figure = null;
+var _figure;
 
 // array of x-y objects.
-var figure = null;
+var figure;
 
 var figureShift = {
   x: 4, 
@@ -39,15 +39,12 @@ function _onGameInit() {
 }
 
 function _onGameRunBefore() {
-  console.log('_onGameRunBefore');
+
 }
 
 function _onGameUpdate() {
-  
-}
-
-function _onGameUpdateAfter() {
-  
+  shiftFigure(0, 1);
+  //if ()
 }
 
 function _onGameDraw() {
@@ -116,6 +113,12 @@ function dumpFigure(figure) {
 function shiftFigure(x, y) {
   x = x || 0;
   y = y || 0;
+  
+  var bounds = getFigureBounds();
+  
+  if ((bounds.left == 0 && x < 0) || ((bounds.right >= gameWidth - 1) && x > 0)) {
+    x = 0;
+  }
  
   figureShift.x += x;
   figureShift.y += y;
@@ -127,9 +130,36 @@ function shiftFigure(x, y) {
   }
 }
 
+function getFigureSize() {
+  return {
+    w: figure[0].length,
+    h: figure.length,
+  };
+}
+
+function getFigureBounds() {
+  var top = gameHeight - 1;
+  var bottom = 0;
+  var left = gameWidth - 1; 
+  var right = 0;
+  
+  for (var i = 0; i < figure.length; i++) {
+    top = Math.min(top, figure[i].y);
+    bottom = Math.max(bottom, figure[i].y);
+    left = Math.min(left, figure[i].x);
+    right = Math.max(right, figure[i].x);
+  }
+  
+  return {
+    top: top,
+    bottom: bottom,
+    left: left,
+    right: right
+  };
+}
+
 function rotateFigure() {
   _figure = matrixTurn(_figure);
-  dumpFigure(_figure);
   figure = prepareFigure(_figure);
   shiftFigure();
 }

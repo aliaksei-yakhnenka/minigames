@@ -1,61 +1,3 @@
-// Canvas objects.
-var canvas;
-var context;
-
-// Cell size in pixels.
-var cellSize = 20;
-
-// Score font size in pixels.
-var scoreSize = 16;
-
-// Big message font size in pixels.
-var messageSize = 36;
-
-var _onGameRunBefore;
-var _onGameRunAfter;
-
-// Colors.
-var COLOR_GRID = 'rgba(222, 222, 222, .5)';
-var COLOR_PLAYER = 'rgba(0, 64, 222, .5)';
-var COLOR_OBJECT = 'rgba(0, 222, 64, .5)';
-var COLOR_CROSS = 'rgba(255, 0, 0, .75)';
-var COLOR_SCORE = 'rgba(0, 0, 0, .75)';
-var COLOR_MESSAGE = 'rgba(64, 64, 222, .75)';
-var COLOR_GAMEOVER = 'rgba(222, 0, 0, .75)';
-
-// Direction constants.
-var DIR_UP = 1;
-var DIR_DOWN = 3;
-var DIR_LEFT = 2;
-var DIR_RIGHT = 4;
-
-// Keyboard keys.
-var KEYS = {
-  UP: 38,
-  DOWN: 40,
-  LEFT: 37,
-  RIGHT: 39
-};
-
-// Field parameters.
-var gameWidth = 10;
-var gameHeight = 20;
-
-// Main game cycle.
-var gameCycle = null;
-
-// Game update period.
-var gameCycleUpdateInterval = 100;
-var gameCycleUpdateTracker = 0;
-
-// Speed of the game.
-var gameSpeed = 1;
-
-// Array of game info.
-var gameScore = {
-  score: 0
-};
-
 /**
  * Returns a random integer number between supplied min and max.
  */
@@ -72,17 +14,11 @@ function chance(probability) {
 
 function matrixTurn(matrix) {
   var _matrix = [];
-  for (var j = 0; j < matrix[0].length; j++) {
-    for (var i = 0; i < matrix.length; i++) {
+  for (var i = 0; i < matrix.length; i++) {
+    for (var j = 0; j < matrix[0].length; j++) {
       if (!_matrix[j]) {
         _matrix[j] = [];
       }
-      _matrix[j][i] = 0;
-    }
-  }
-
-  for (var i = 0; i < matrix.length; i++) {
-    for (var j = 0; j < matrix[0].length; j++) {
       _matrix[j][matrix.length - i - 1] = matrix[i][j];
     }
   }
@@ -98,39 +34,41 @@ function intersects(cell1, cell2) {
 }
 
 function gameInit() {
-  
-  
   canvas = document.getElementById('minigame-canvas');
-  if (!canvas || canvas.getContext) {
+  if (!canvas || !canvas.getContext) {
     return;
   }
   
   _onGameInit = _onGameInit || function(){};
+  _onGameOver = _onGameOver || function(){};
   _onGameRunBefore = _onGameRunBefore || function(){};
   _onGameRunAfter = _onGameRunAfter || function(){};
+  _onGameUpdate = _onGameUpdate || function(){};
+  _onGameDraw = _onGameDraw || function(){};
+  _onKeyDown = _onKeyDown || function(event){};
   
   context = canvas.getContext('2d');
   window.addEventListener('keydown', gameKeydown, true);
+  
+  _onGameInit();
   gameCycle = setInterval(gameRun, gameCycleUpdateInterval);
-
-  _onGameInit();  
 }
 
 function gameRun() {
   _onGameRunBefore();
+  
   gameCycleUpdateTracker += gameCycleUpdateInterval;
-  if (gameCycleUpdateTracker >= 500 / gameSpeed) {
+  if (gameCycleUpdateTracker >= 1000 - (gameSpeed * gameCycleUpdateInterval)) {
     gameCycleUpdateTracker = 0;
-
     _onGameUpdate();
-
-    clearCanvas();
-    drawGrid();
-    drawScoretable();
-
-    _onGameDraw();
-    _onGameUpdateAfter();
   }
+  
+  clearCanvas();
+  drawGrid();
+  drawScoretable();
+
+  _onGameDraw();
+  
   _onGameRunAfter();
 }
 
